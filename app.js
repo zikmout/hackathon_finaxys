@@ -47,6 +47,9 @@ app.all('*', function(req, res, next) {
 
 app.use(bodyParser.json());
 app.post('/check', function (req, res) {
+	var email = req.body.email;
+	email = email.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
+	req.body.email = email[0];
 	r.db('test').table('user').filter({email: req.body.email}).run(connection, function (err, cursor) {
             if (err) res.send({"message": "Error while reading new user"});
             else {
@@ -54,8 +57,11 @@ app.post('/check', function (req, res) {
 				if (err) res.send({"Message": "err cursor"});
 				else {
 					//console.log(result, result[0].address, result[0].pubKey);
+					//console.log(req.body);
 					var accountData = { "address": result[0].address, "pubKey": result[0].pubKey, "privKey": req.body.privKey };
-  					tbot.execTbot(accountData, erisdbURL, tbotAbi, tbotContractAddress, erisC);
+  					tbot.execTbot(accountData, erisdbURL, tbotAbi, tbotContractAddress, erisC, req.body.chequeNum);
+					console.log(accountData);					
+//res.send("Thank you");
 					res.send(JSON.stringify(accountData, null, 2));
 				}
 			});
@@ -64,6 +70,17 @@ app.post('/check', function (req, res) {
                 }
         //              cursor.toArray(function (err, result) {
            });
+});
+
+app.post('/verify', function (req, res) {
+
+	tbot.verifyCheque(erisdbURL, tbotAbi, tbotContractAddress, erisC, req.body.chequeNum, function(err, info) {
+		if (err) res.send({"message": "Error while trying to verify the cheque.... :("});
+		else {
+			res.send(info);
+		}
+	});
+	
 });
 
 /*

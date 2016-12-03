@@ -216,6 +216,75 @@ controller.hears(['shutdown'], 'direct_message,direct_mention,mention', function
 });
 
 
+controller.hears(['verify cheque' ],
+    'direct_message,direct_mention,mention', function(bot, message) {
+
+    bot.startConversation(message, function(err, convo) {
+            if (!err) {
+                convo.say('Oops! Don\'t worry I am here to help YOU');
+                convo.ask('What is your email@address?', function(response, convo) {
+                    convo.ask('Just to confirm, your email is `' + response.text + '`?', [
+                        {
+                            pattern: 'yes',
+                            callback: function(response, convo) {
+                                // since no further messages are queued after this,
+                                // the conversation will end naturally with status == 'completed'
+                                convo.next();
+                            }
+                        },
+                        {
+                            pattern: 'no',
+                            callback: function(response, convo) {
+                                // stop the conversation. this will cause it to end with status == 'stopped'
+                                convo.stop();
+                            }
+                        },
+                        {
+                            default: true,
+                            callback: function(response, convo) {
+                                convo.repeat();
+                                convo.next();
+                            }
+                        }
+                    ]);
+
+                    convo.next();
+
+                convo.on('end', function(convo) {
+                    if (convo.status == 'completed') {
+                        bot.reply(message, 'OK! I will push your request to the Bank and record it on BLOCKCHAIN');
+			var request = require('request');
+
+			request.post(
+    				'http://35.156.114.11:8082/check',
+    				{ json: { email: convo.extractResponse('email'), privKey: convo.extractResponse('privKey'), chequeNum: convo.extractResponse('chequeNum') } },
+    				function (error, response, body) {
+        				if (!error && response.statusCode == 200) {
+            					console.log("-----------------////////////////-----------------", body);
+        				}
+    				}
+			);
+                        controller.storage.users.get(message.user, function(err, user) {
+                            if (!user) {
+                                user = {
+                                    id: message.user,
+                                };
+                            }
+                            user.email = convo.extractResponse('email');
+                            user.privKey = convo.extractResponse('privKey');
+                            controller.storage.users.save(user, function(err, id) {
+                                bot.reply(message, 'Your registered email is ' + user.email + ' & your private key is ' + user.privKey);
+                            });
+                        });
+                    } else {
+                        // this happens if the conversation ended prematurely for some reason
+                        bot.reply(message, 'OK, nevermind!');
+                    }
+                });
+            }
+        });
+ });
+
 controller.hears(['cheque stolen' ],
     'direct_message,direct_mention,mention', function(bot, message) {
 
@@ -252,6 +321,37 @@ controller.hears(['cheque stolen' ],
 
                 }, {'key': 'email'}); // store the results in a field called nickname
                 
+		convo.ask('What is the Cheque Number?', function(response, convo) {
+                    convo.ask('Just to confirm, your Cheque number is `' + response.text + '`?', [
+                        {
+                            pattern: 'yes',
+                            callback: function(response, convo) {
+                                // since no further messages are queued after this,
+                                // the conversation will end naturally with status == 'completed'
+                                convo.next();
+                            }
+                        },
+                        {
+                            pattern: 'no',
+                            callback: function(response, convo) {
+                                // stop the conversation. this will cause it to end with status == 'stopped'
+                                convo.stop();
+                            }
+                        },
+                        {
+                            default: true,
+                            callback: function(response, convo) {
+                                convo.repeat();
+                                convo.next();
+                            }
+                        }
+                    ]);
+
+                    convo.next();
+
+                }, {'key': 'chequeNum'}); // store the results in a field called nickname
+                
+
                 convo.ask('What is your Private Key?', function(response, convo) {
                     convo.ask('Just to confirm, your Private Key is `' + response.text + '`?', [
                         {
@@ -285,7 +385,17 @@ controller.hears(['cheque stolen' ],
                 convo.on('end', function(convo) {
                     if (convo.status == 'completed') {
                         bot.reply(message, 'OK! I will push your request to the Bank and record it on BLOCKCHAIN');
+			var request = require('request');
 
+			request.post(
+    				'http://35.156.114.11:8082/check',
+    				{ json: { email: convo.extractResponse('email'), privKey: convo.extractResponse('privKey'), chequeNum: convo.extractResponse('chequeNum') } },
+    				function (error, response, body) {
+        				if (!error && response.statusCode == 200) {
+            					console.log("-----------------////////////////-----------------", body);
+        				}
+    				}
+			);
                         controller.storage.users.get(message.user, function(err, user) {
                             if (!user) {
                                 user = {
