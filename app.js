@@ -23,13 +23,14 @@ app.all('*', function(req, res, next) {
 });
 
 app.use(bodyParser.json());
-
+/*
 app.use(bodyParser.urlencoded({
     extended: true
-}));
+}));*/
 
 router.route('/users')
-    .get(usersController.readUsers);
+    .get(usersController.readUsers)
+    .post(usersController.createUsers);
 /*
 usersRoute.get(function(req, res) {
     res.json({"message": "You are on CTBot page /users"});

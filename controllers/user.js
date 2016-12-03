@@ -10,11 +10,22 @@ r.connect( {host: 'localhost', port: 28015}, function(err, conn) {
 
 exports.readUsers = function (req, res) {
         r.db('test').table('user').run(connection, function (err, info) {
-            if (err) res.send({"message": "Error while creating new user"});
+            if (err) res.send({"message": "Error while reading new user"});
             else {
-			console.log('toto', info);
-                    res.send({"message": "Ok, user successfully created"});
+			        console.log('toto', info);
+                    res.send({"message": "Ok, user successfully read"});
                 }
 	//		cursor.toArray(function (err, result) {
            })
         }
+
+exports.createUsers = function (req, res) {
+        console.log(req.body);
+        r.db('test').table('user').insert([req.body]).run(connection, function (err, info) {
+            if (err) res.send({"message": "Error while creating new user"})
+            else {
+                console.log('user created ===>', req.body);
+                res.send({"message": "User successfully created !"});
+            }
+        })
+}
