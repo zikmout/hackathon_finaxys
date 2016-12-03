@@ -215,21 +215,38 @@ controller.hears(['shutdown'], 'direct_message,direct_mention,mention', function
     });
 });
 
-
 controller.hears(['verify cheque' ],
     'direct_message,direct_mention,mention', function(bot, message) {
 
     bot.startConversation(message, function(err, convo) {
             if (!err) {
-                convo.say('Oops! Don\'t worry I am here to help YOU');
-                convo.ask('What is your email@address?', function(response, convo) {
-                    convo.ask('Just to confirm, your email is `' + response.text + '`?', [
+                convo.say('Sure, Give me the Cheque Number');
+                convo.ask('And I\'ll verify if its stolen!', function(response, convo) {
+                    convo.ask('Just to confirm, the cheque Number is `' + response.text + '`?', [
                         {
                             pattern: 'yes',
                             callback: function(response, convo) {
                                 // since no further messages are queued after this,
                                 // the conversation will end naturally with status == 'completed'
+
+
+                        var request = require('request');
+                        request.post(
+                            'http://35.156.114.11:8082/verify',
+                            { json: { chequeNum: convo.extractResponse('chequeNum') } },
+                            function (error, response, body) {
+                                if (!error && response.statusCode == 200) {
+                                console.log("-----------------////////////////-----------------", body);
+                                convo.say(''+ body);
                                 convo.next();
+                                //bot.reply(message, body);
+                            }
+                        });
+
+
+
+
+                                //convo.next();
                             }
                         },
                         {
@@ -250,40 +267,46 @@ controller.hears(['verify cheque' ],
 
                     convo.next();
 
+                }, {'key': 'chequeNum'}); // store the results in a field called chequeNum
+
                 convo.on('end', function(convo) {
                     if (convo.status == 'completed') {
-                        bot.reply(message, 'OK! I will push your request to the Bank and record it on BLOCKCHAIN');
-			var request = require('request');
-
-			request.post(
-    				'http://35.156.114.11:8082/check',
-    				{ json: { email: convo.extractResponse('email'), privKey: convo.extractResponse('privKey'), chequeNum: convo.extractResponse('chequeNum') } },
-    				function (error, response, body) {
-        				if (!error && response.statusCode == 200) {
-            					console.log("-----------------////////////////-----------------", body);
-        				}
-    				}
-			);
-                        controller.storage.users.get(message.user, function(err, user) {
-                            if (!user) {
-                                user = {
-                                    id: message.user,
-                                };
-                            }
-                            user.email = convo.extractResponse('email');
-                            user.privKey = convo.extractResponse('privKey');
-                            controller.storage.users.save(user, function(err, id) {
-                                bot.reply(message, 'Your registered email is ' + user.email + ' & your private key is ' + user.privKey);
-                            });
-                        });
-                    } else {
-                        // this happens if the conversation ended prematurely for some reason
-                        bot.reply(message, 'OK, nevermind!');
-                    }
-                });
+                        //bot.reply(message, 'OK! Hang ON');
+                        // var request = require('request');
+                        // request.post(
+                        //     'http://35.156.114.11:8082/verify',
+                        //     { json: { chequeNum: convo.extractResponse('chequeNum') } },
+                        //     function (error, response, body) {
+                        //         if (!error && response.statusCode == 200) {
+                        //         console.log("-----------------////////////////-----------------", body);
+                        //         bot.reply(message, body);
+                        //     }
+                        // });
+                //     controller.storage.users.get(message.user, function(err, user) {
+                //             if (!user) {
+                //                 user = {
+                //                     id: message.user,
+                //                 };
+                //             }
+                //             user.email = convo.extractResponse('email');
+                //             user.privKey = convo.extractResponse('privKey');
+                //             controller.storage.users.save(user, function(err, id) {
+                //                 bot.reply(message, 'Your registered email is ' + user.email + ' & your private key is ' + user.privKey);
+                //             });
+                //         });
+                //     } else {
+                //         // this happens if the conversation ended prematurely for some reason
+                //         bot.reply(message, 'OK, nevermind!');
+                //     }
+                // });
             }
         });
- });
+
+    }
+});
+    });
+                
+
 
 controller.hears(['cheque stolen' ],
     'direct_message,direct_mention,mention', function(bot, message) {
