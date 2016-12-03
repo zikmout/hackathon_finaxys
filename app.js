@@ -77,7 +77,12 @@ app.post('/verify', function (req, res) {
 	tbot.verifyCheque(erisdbURL, tbotAbi, tbotContractAddress, erisC, req.body.chequeNum, function(err, info) {
 		if (err) res.send({"message": "Error while trying to verify the cheque.... :("});
 		else {
-			res.send(info);
+			console.log(info);
+			if (info) {
+				res.send("/!\\ ATTENTION, the cheque is stolen. Don't accept it!");
+			} else {
+				res.send("Enjoy your money, Its not stolen");
+			}
 		}
 	});
 	
