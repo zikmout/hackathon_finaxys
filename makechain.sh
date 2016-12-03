@@ -13,7 +13,7 @@ chain_dir=~/.eris/chains/$chainName/$chainName$accountName
 echo $chain_dir
 
 #Start the chain
-eris chains make --account-types=Root:2,Full:1 $chainName
-eris chains new $chainName --dir $chain_dir
+eris chains make --account-types=Root:5,Full:1 $chainName
+eris chains start $chainName --init-dir $chain_dir
 echo "Your Chain is UP and Running have a look"
 eris chains ls
