@@ -122,6 +122,7 @@ controller.hears(['what is my name', 'who am i'], 'direct_message,direct_mention
 
     controller.storage.users.get(message.user, function(err, user) {
         if (user && user.name) {
+            // console.log("-----------------------------", user)
             bot.reply(message, 'Your name is ' + user.name);
         } else {
             bot.startConversation(message, function(err, convo) {
@@ -214,6 +215,104 @@ controller.hears(['shutdown'], 'direct_message,direct_mention,mention', function
     });
 });
 
+
+controller.hears(['cheque stolen' ],
+    'direct_message,direct_mention,mention', function(bot, message) {
+
+    bot.startConversation(message, function(err, convo) {
+            if (!err) {
+                convo.say('Oops! Don\'t worry I am here to help YOU');
+                convo.ask('What is your email@address?', function(response, convo) {
+                    convo.ask('Just to confirm, your email is `' + response.text + '`?', [
+                        {
+                            pattern: 'yes',
+                            callback: function(response, convo) {
+                                // since no further messages are queued after this,
+                                // the conversation will end naturally with status == 'completed'
+                                convo.next();
+                            }
+                        },
+                        {
+                            pattern: 'no',
+                            callback: function(response, convo) {
+                                // stop the conversation. this will cause it to end with status == 'stopped'
+                                convo.stop();
+                            }
+                        },
+                        {
+                            default: true,
+                            callback: function(response, convo) {
+                                convo.repeat();
+                                convo.next();
+                            }
+                        }
+                    ]);
+
+                    convo.next();
+
+                }, {'key': 'email'}); // store the results in a field called nickname
+                
+                convo.ask('What is your Private Key?', function(response, convo) {
+                    convo.ask('Just to confirm, your Private Key is `' + response.text + '`?', [
+                        {
+                            pattern: 'yes',
+                            callback: function(response, convo) {
+                                // since no further messages are queued after this,
+                                // the conversation will end naturally with status == 'completed'
+                                convo.next();
+                            }
+                        },
+                        {
+                            pattern: 'no',
+                            callback: function(response, convo) {
+                                // stop the conversation. this will cause it to end with status == 'stopped'
+                                convo.stop();
+                            }
+                        },
+                        {
+                            default: true,
+                            callback: function(response, convo) {
+                                convo.repeat();
+                                convo.next();
+                            }
+                        }
+                    ]);
+
+                    convo.next();
+
+                }, {'key': 'privKey'}); // store the results in a field called privkey
+
+                convo.on('end', function(convo) {
+                    if (convo.status == 'completed') {
+                        bot.reply(message, 'OK! I will push your request to the Bank and record it on BLOCKCHAIN');
+
+                        controller.storage.users.get(message.user, function(err, user) {
+                            if (!user) {
+                                user = {
+                                    id: message.user,
+                                };
+                            }
+                            user.email = convo.extractResponse('email');
+                            user.privKey = convo.extractResponse('privKey');
+                            controller.storage.users.save(user, function(err, id) {
+                                bot.reply(message, 'Your registered email is ' + user.email + ' & your private key is ' + user.privKey);
+                            });
+                        });
+                    } else {
+                        // this happens if the conversation ended prematurely for some reason
+                        bot.reply(message, 'OK, nevermind!');
+                    }
+                });
+            }
+        });
+        // var hostname = os.hostname();
+        // var uptime = formatUptime(process.uptime());
+
+        // bot.reply(message,
+        //     ':robot_face: I am a bot named <@' + bot.identity.name +
+        //      '>. I have been running for ' + uptime + ' on ' + hostname + '.');
+
+    });
 
 controller.hears(['uptime', 'identify yourself', 'who are you', 'what is your name'],
     'direct_message,direct_mention,mention', function(bot, message) {
