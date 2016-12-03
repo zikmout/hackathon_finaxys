@@ -1,0 +1,7 @@
+{
+	"name": "CTBot",
+	"main": "app.js",
+	"dependencies": {
+		"express": "~4.1.1"
+		}
+}
