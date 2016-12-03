@@ -3,7 +3,9 @@
   "main": "app.js",
   "dependencies": {
     "body-parser": "^1.15.2",
+    "eris-contracts": "^0.15.6",
     "express": "~4.1.1",
+    "prompt": "^1.0.0",
     "rethinkdb": "^2.3.3"
   }
 }

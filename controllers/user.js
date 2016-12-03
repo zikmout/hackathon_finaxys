@@ -1,6 +1,7 @@
 //var User = require('./../models/user');
 
-r = require('rethinkdb');
+var r = require('rethinkdb');
+var tbot = require('../.eris/apps/tbot/executetbot.js');
 
 var connection = null;
 r.connect( {host: 'localhost', port: 28015}, function(err, conn) {
